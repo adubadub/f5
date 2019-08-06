@@ -1,0 +1,12 @@
+{
+    "DEVICE_IP":            "+DEVICE IP HERE+",
+    "DEVICE_UN":            "+DEVICE USERNAME HERE+",
+    "DEVICE_PWD":           "+DEVICE PASWORD HERE+",
+    "CA_UN":                "+MS CA USERNAME HERE+",
+    "CA_PWD":               "+MS CA PASSWORD HERE+",
+    "CERT_COUNTRY":         "+2-CHAR CERT COUNTRY CODE HERE+",
+    "CERT_STATE":           "+CERT STATE HERE+",
+    "CERT_CITY":            "+CERT CITY HERE+",
+    "CERT_ORG":             "+CERT ORG HERE+",
+    "CERT_OU":              "+CERT OU HERE+"
+}
