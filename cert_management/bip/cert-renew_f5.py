@@ -99,6 +99,7 @@ if True: # fetch cert file from CA and store as new name locally
     new_certname = f'{cn_short}_{date_format}.crt'
     ca_client.fetch(f"{cert_drive}\\{certname}", new_certname)
 if True: # read cert file to variable
+    ## uncomment below to test without CA call
     #new_certname = f'{cn_short}_{date_format}.crt'
     with open(new_certname, 'r+') as cert_import:
         cert_lines = cert_import.readlines()
