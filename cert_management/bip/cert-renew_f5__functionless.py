@@ -1,8 +1,8 @@
 #! /usr/bin/env python3
 if True: # imports    
     import os
-    import sys
     import paramiko
+    from paramiko import SSHClient
     import datetime
     from datetime import date
     import time
@@ -31,61 +31,18 @@ if True: # set local variables
     ca_ip = '''+MS CA IP HERE+'''
     ca_domain = '''+MS CA DOMAIN HERE+'''
     cert_drive = r'''+CA DRIVE CERTIFICATE DIRECTORY HERE+'''
-if True: # define connect_ssh function
-    def connect_ssh(commands, interactive):
-        client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(device_ip, port=22, username=device_username, password=device_password, look_for_keys=False, timeout=10)
-        
-        if interactive == True:
-            if type(commands) == list:
-                for c in commands:
-                    stdin, stdout, stderr = client.exec_command(c)
-                    output = (stdout.read()).decode("utf-8")
-                    output_lines = output.split()
-                    return output_lines
-            else:
-                stdin, stdout, stderr = client.exec_command(commands)
-                output = (stdout.read()).decode("utf-8")
-                output_lines = output.split()
-                return output_lines
-        else:
-            stdin, stdout, stderr = client.exec_command(commands)
-        
-        stderr.close()
-        stdout.close()
-        stdin.close()
-        client.close()
-if True: # define remote_conn_send function
-    def remote_conn_send(commands):
-        client = paramiko.SSHClient()
-        client.load_system_host_keys()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(device_ip, port=22, username=device_username, password=device_password, look_for_keys=False, timeout=10)
-        remote_conn = client.invoke_shell()
-
-        for key in commands:
-            if 'save' in key:
-                print("Saving sys config (this may take up to 30 seconds)...")
-                remote_conn.send(key)
-                time.sleep(int(command_dict[key]))
-            elif 'restart' in key:
-                print("Restarting httpd service...")
-                remote_conn.send(key)
-                time.sleep(int(command_dict[key]))
-            else:
-                remote_conn.send(str(key))
-                time.sleep(int(command_dict[key]))
-        
-        remote_conn.close()
-        client.close()
+if True: # open first ssh session to device
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(look_for_keys=False, allow_agent=False, hostname=device_ip, port=22, username=device_username, password=device_password)
 if True: # get cn, cn-shortname 
     print("Getting CN and CN shortname from device...")
-    call = connect_ssh('openssl x509 -noout -subject -in /config/httpd/conf/ssl.crt/server.crt', True)
+    stdin, stdout, stderr = ssh.exec_command('openssl x509 -noout -subject -in /config/httpd/conf/ssl.crt/server.crt')
+    output = (stdout.read()).decode("utf-8")
+    output_lines = output.split()
     cn_unformatted = []
-    
-    for val in call:
+
+    for val in output_lines:
         if 'CN' in val:
             cn_unformatted.append(val)
     
@@ -104,15 +61,22 @@ if True: # define csrname and certname variables
     certname = f'{cn_short}.cer'
 if True: # generate csr
     print("Generating new CSR on device...")
-    connect_ssh(f'openssl req -new -key /config/httpd/conf/ssl.key/server.key -out /config/httpd/conf/ssl.csr/{csrname} -subject -subj "/C={cert_country}/ST={cert_state}/L={cert_city}/O={cert_org}/OU={cert_ou}/CN={cn}"', False)
+    ssh.exec_command(f'openssl req -new -key /config/httpd/conf/ssl.key/server.key -out /config/httpd/conf/ssl.csr/{csrname} -subject -subj "/C={cert_country}/ST={cert_state}/L={cert_city}/O={cert_org}/OU={cert_ou}/CN={cn}"\n')
 if True: # read csr to variable
-    call = connect_ssh(f'cat /config/httpd/conf/ssl.csr/{csrname}', True)
-
-    for idx, val in enumerate(call):
+    stdin, stdout, stderr = ssh.exec_command(f'cat /config/httpd/conf/ssl.csr/{csrname}')
+    output = (stdout.read()).decode("utf-8")
+    output_lines = output.splitlines()
+    
+    for idx, val in enumerate(output_lines):
         if 'BEGIN' in val:
             csr_start_index = idx
 
-    csr_split = call[csr_start_index:]
+    csr_split = output_lines[csr_start_index:]
+if True: # close first ssh session to device
+    stdin.close()
+    stdout.close()
+    stdin.close()
+    ssh.close()
 if True: # write csr variable to local csr file
     print("Writing CSR to local file...")
     with open(f'{csrname}', 'w+') as csr:
@@ -135,28 +99,36 @@ if True: # fetch cert file from CA and store as new name locally
     new_certname = f'{cn_short}_{date_format}.crt'
     ca_client.fetch(f"{cert_drive}\\{certname}", new_certname)
 if True: # read cert file to variable
-    ## uncomment to test without CA
+    ## uncomment below to test without CA call
     #new_certname = f'{cn_short}_{date_format}.crt'
     with open(new_certname, 'r+') as cert_import:
         cert_lines = cert_import.readlines()
+if True: # open second ssh session to device
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(look_for_keys=False, allow_agent=False, hostname=device_ip, port=22, username=device_username, password=device_password)
 if True: # import new certificate to device  
     print("Importing new certificate to device...")  
     for line in cert_lines:
         line = str(line).rstrip()
-        connect_ssh(f'echo "{line}" >> /config/httpd/conf/ssl.crt/{new_certname}', False)
+        ssh.exec_command(f'echo "{line}" >> /config/httpd/conf/ssl.crt/{new_certname}')
         time.sleep(.5)
 if True: # apply new certificate as host certificate
     print("Moving to tmos and applying certificate...")
-    command_dict = {
-        # command and time sleep parameters
-        'tmsh\n': 3,
-        f'modify /sys httpd ssl-certfile /config/httpd/conf/ssl.crt/{new_certname}\n': 5,
-        'save /sys config partitions all\n': 20,
-        'restart /sys service httpd\n': 5
-    }
-    
-    remote_conn_send(command_dict)
-if True: # close script
+    remote_conn = ssh.invoke_shell()
+    remote_conn.send('tmsh\n')
+    time.sleep(3)
+    remote_conn.send(f'modify /sys httpd ssl-certfile /config/httpd/conf/ssl.crt/{new_certname}\n')
+    time.sleep(3)
+    print("Saving sys config (this may take up to 30 seconds)...")
+    remote_conn.send('save /sys config partitions all\n')
+    time.sleep(20)
+    print("Restarting httpd service...")
+    remote_conn.send('restart /sys service httpd\n')
+    time.sleep(5)
+if True: # close second ssh session to device
+    print("Closing connections to device...")
+    remote_conn.close()
+    ssh.close()
     print("Job done!")
     print("Remember to revoke the OLD certificate on the CA.")
-    sys.exit()
