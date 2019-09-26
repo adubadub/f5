@@ -28,11 +28,7 @@ if True: # set json variables
         cloud_onprem        = js['CLOUD']
         cloud_acct          = js['CLD_ACCOUNT']
 if True: # set local variables
-    now = datetime.datetime.now()
-    month = '{:02d}'.format(now.month)
-    day = '{:02d}'.format(now.day)
-    date_format = f'{now.year}{month}{day}'
-    todays_date = now
+    date_format = time.strftime("%Y%m%d")
     ca_ip = '''+MS CA IP HERE+'''
     ca_domain = '''+MS CA DOMAIN HERE+'''
     cert_drive = r'''+CA DRIVE CERTIFICATE DIRECTORY HERE+'''
