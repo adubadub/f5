@@ -1,0 +1,17 @@
+{
+    "DEVICE_IP":            "+DEVICE IP HERE - NA IF UNKNOWN (NEED THIS OR NAME)+",
+    "DEVICE_NAME":          "+DEVICE NAME HERE - NA IF UNKNOWN (NEED THIS OR IP)+",
+    "DEVICE_UN":            "+DEVICE USERNAME HERE+",
+    "DEVICE_PWD":           "+DEVICE PASSWORD HERE+",
+    "CLOUD":                "+CLOUD PROVIDER HERE (AWS, Azure, NA) HERE+",
+    "CLD_ACCOUNT":          "+LOCAL DIR CLOUD PROVIDER CLI PROFILE/ACCOUNT HERE+",
+    "MGMT_IP":              "+DEVICE MGMT IP HERE - NA IF UNKNOWN+",
+    "AD_IP":                "+AD SERVER IP HERE+",
+    "AD_SUBNET":            "+AD SERVER SUBNET HERE+",
+    "AD_SVCACCT":           "+AD BIND ACCOUNT USERNAME HERE+",
+    "AD_SVCACCT_PWD":       "+AD BIND ACCOUNT PASSWORD HERE+",
+    "BA_OUS":               "+BIND ACCOUNT OUS (ou=admins,ou=users) HERE+",
+    "BA_DCS":               "+BIND ACCOUNT DCS (dc=mydomain,dc=com) HERE+",
+    "USER_OUS":             "+USER ACCOUNTS OUS (ou=internal,ou=users) HERE+",
+    "USER_DCS":             "+USER ACCOUNTS DCS (dc=mydomain,dc=com) HERE+"                       
+}
