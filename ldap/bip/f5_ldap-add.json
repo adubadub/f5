@@ -3,7 +3,7 @@
     "DEVICE_NAME":          "+DEVICE NAME HERE - NA IF UNKNOWN (NEED THIS OR IP)+",
     "DEVICE_UN":            "+DEVICE USERNAME HERE+",
     "DEVICE_PWD":           "+DEVICE PASSWORD HERE+",
-    "CLOUD":                "+CLOUD PROVIDER HERE (AWS, Azure, NA) HERE+",
+    "CLOUD":                "+CLOUD PROVIDER (AWS, Azure, NA) HERE+",
     "CLD_ACCOUNT":          "+LOCAL DIR CLOUD PROVIDER CLI PROFILE/ACCOUNT HERE+",
     "MGMT_IP":              "+DEVICE MGMT IP HERE - NA IF UNKNOWN+",
     "AD_IP":                "+AD SERVER IP HERE+",

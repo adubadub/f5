@@ -11,6 +11,6 @@
     "CERT_CITY":            "+CERT CITY HERE+",
     "CERT_ORG":             "+CERT ORG HERE+",
     "CERT_OU":              "+CERT OU HERE+",
-    "CLOUD":                "+CLOUD PROVIDER HERE (AWS, Azure, NA) HERE+",
+    "CLOUD":                "+CLOUD PROVIDER (AWS, Azure, NA) HERE+",
     "CLD_ACCOUNT":          "+LOCAL DIR CLOUD PROVIDER CLI PROFILE/ACCOUNT HERE+"
 }
