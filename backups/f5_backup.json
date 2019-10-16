@@ -1,0 +1,5 @@
+{
+    "SERVER_UN":            "+BACKUP SERVER UN HERE+",
+    "SERVER_PWD":           "+BACKUP SERVER PWD HERE+",
+    "HOSTS_PWD":            "+PWD OF ENCRYPTED FILE (IF NECESSARY) HERE+"
+}
