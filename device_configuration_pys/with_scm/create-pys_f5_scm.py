@@ -3,15 +3,24 @@ if True: # Imports
     import sys
     import subprocess
     import json
-    import py_write
+    import time
+    import py_write_f5
     import pypsrp
     from pypsrp.client import Client
 if True: # Set environment variables
-    with open('create-pys.json') as f:
+    with open('create-pys_f5_scm.json') as f:
         js = json.load(f)
         backup_server_un        = js['BS_UN']
         backup_server_pwd       = js['BS_PWD']
+        scm_url                 = js['SCM_URL']
+        scm_un                  = js['SCM_UN']
+        scm_pwd                 = js['SCM_PWD']
+        scm_email               = js['SCM_EMAIL']
+        repo_url                = js['REPO_URL']
+        repo_name               = js['REPO_NAME']
 if True: # Set local variables
+    date_format             = time.strftime("%Y%m%d")
+    new_branch              = f'py-updates_{date_format}'
     backup_server_ip        = '+BACKUP SERVER IP HERE+'
     backup_server_domain    = '+BACKUP SERVER DOMAIN HERE+'
     backup_drive            = '+DRIVE WHERE BACK-UPS ARE SAVED+'
@@ -61,7 +70,7 @@ if True: # Generate applicable local device file list
             device.append(val)
 if True: # Write py config files
     for dev in device:
-        py_write.BUILD(dev)
+        py_write_f5.BUILD(dev)
         device_short = dev.split('.')
         device_short = device_short[0]
         dev_short_split = device_short.split('_')
@@ -70,6 +79,28 @@ if True: # Write py config files
         run = command.communicate()
 if True: # Remove local backup files
     command = subprocess.Popen(f'rm -r config_files/', stdout=subprocess.PIPE, shell=True)
+    run = command.communicate()
+if True: # Copy local py files to repository directory
+    command = subprocess.Popen(f'cp -r py_files/ {repo_name}/f5/py_files/', stdout=subprocess.PIPE, shell=True)
+    run = command.communicate()
+if True: # Create new branch with updated py files and commit/push to repo
+    send_commands = [ 
+        f'(cd {repo_name}/f5 && command git checkout -b {new_branch})',
+        f'(cd {repo_name}/f5 && git add py_files/)', 
+        f'(cd {repo_name}/f5 && git commit -m "py add {date_format}")', 
+        f'(cd {repo_name}/f5 && git push https://{scm_un}:{scm_pwd}@{repo_url} --all)',
+        f'(cd {repo_name}/f5 && git checkout master)'
+        ]
+
+    for c in send_commands:
+        cmd = subprocess.Popen(c, stdout=subprocess.PIPE, shell=True)
+        run = cmd.communicate()
+        time.sleep(.5)
+if True: # Create PR for new branch (below example for BitBucket API)
+    cmd = f'''
+    curl -X POST -H "Content-Type: application/json" -u {scm_email}:{scm_pwd} {scm_url}{scm_un}/{repo_name}/pullrequests -d '{{ "title": "merge py updates", "description": "py-updates {date_format}", "source": {{ "branch": {{ "name": "{new_branch}" }}, "repository": {{ "full_name": "{scm_un}/{repo_name}" }} }}, "destination": {{ "branch": {{ "name": "master" }} }}, "close_source_branch": false }}'
+    '''
+    command = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
     run = command.communicate()
 if True: # Close script
     sys.exit()
